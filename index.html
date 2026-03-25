@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chatter Queue Flow — Rate My Tits v2</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0e1a; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; padding: 40px 20px; }
+  h1 { text-align: center; color: #00d4ff; font-size: 28px; margin-bottom: 8px; }
+  .subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 50px; }
+
+  .flow-container { max-width: 900px; margin: 0 auto; }
+
+  .legend { display: flex; gap: 24px; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #888; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+  /* Step row */
+  .step { display: flex; align-items: flex-start; position: relative; }
+  .step-left { width: 140px; text-align: right; padding-right: 20px; padding-top: 14px; flex-shrink: 0; }
+  .step-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+  .step-time { font-size: 11px; color: #444; }
+
+  .step-center { width: 50px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .dot { width: 18px; height: 18px; border-radius: 50%; border: 3px solid; z-index: 2; flex-shrink: 0; }
+  .dot.system { border-color: #00d4ff; background: #0a0e1a; }
+  .dot.fan { border-color: #ff6b9d; background: #0a0e1a; }
+  .dot.chatter { border-color: #ffd700; background: #0a0e1a; }
+  .dot.ppv { border-color: #00ff88; background: #00ff88; }
+  .dot.decision { border-color: #ff9500; background: #0a0e1a; }
+  .dot.bridge { border-color: #c084fc; background: #0a0e1a; }
+  .dot.abort { border-color: #ff4d4d; background: #0a0e1a; }
+  .line { width: 3px; flex-grow: 1; min-height: 20px; }
+  .line.system { background: #00d4ff33; }
+  .line.fan { background: #ff6b9d33; }
+  .line.chatter { background: #ffd70033; }
+  .line.ppv { background: #00ff8833; }
+  .line.decision { background: #ff950033; }
+  .line.bridge { background: #c084fc33; }
+
+  .step-right { flex: 1; padding: 10px 16px; margin: 6px 0; border-radius: 10px; }
+  .step-right.system { background: #00d4ff10; border: 1px solid #00d4ff30; }
+  .step-right.fan { background: #ff6b9d10; border: 1px solid #ff6b9d30; }
+  .step-right.chatter { background: #ffd70010; border: 1px solid #ffd70030; }
+  .step-right.ppv { background: #00ff8810; border: 1px solid #00ff8830; }
+  .step-right.decision { background: #ff950010; border: 1px solid #ff950030; }
+  .step-right.bridge { background: #c084fc10; border: 1px solid #c084fc30; }
+  .step-right.abort { background: #ff4d4d10; border: 1px solid #ff4d4d30; }
+
+  .step-tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px; }
+  .step-tag.system { background: #00d4ff25; color: #00d4ff; }
+  .step-tag.fan { background: #ff6b9d25; color: #ff6b9d; }
+  .step-tag.chatter { background: #ffd70025; color: #ffd700; }
+  .step-tag.ppv { background: #00ff8825; color: #00ff88; }
+  .step-tag.decision { background: #ff950025; color: #ff9500; }
+  .step-tag.bridge { background: #c084fc25; color: #c084fc; }
+  .step-tag.abort { background: #ff4d4d25; color: #ff4d4d; }
+
+  .msg { font-size: 14px; line-height: 1.5; color: #ccc; }
+  .msg em { color: #888; font-style: italic; }
+  .msg strong { color: #fff; }
+
+  .section-break { display: flex; align-items: center; margin: 30px 0; padding-left: 140px; }
+  .section-line { flex: 1; height: 1px; background: #333; }
+  .section-label { padding: 4px 16px; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 2px; border: 1px solid #333; border-radius: 20px; margin: 0 12px; white-space: nowrap; }
+
+  .vs-divider { display: flex; align-items: center; justify-content: center; margin: 50px 0; gap: 16px; }
+  .vs-text { color: #ff9500; font-size: 18px; font-weight: 700; letter-spacing: 3px; }
+  .vs-line { width: 100px; height: 2px; background: linear-gradient(90deg, transparent, #ff950050, transparent); }
+
+  .flow-label { text-align: center; padding: 8px 24px; border-radius: 8px; font-size: 13px; font-weight: 700; letter-spacing: 2px; display: inline-block; margin-bottom: 30px; }
+  .flow-label.current { background: #00d4ff15; border: 1px solid #00d4ff40; color: #00d4ff; }
+  .flow-label.new { background: #ffd70015; border: 1px solid #ffd70040; color: #ffd700; }
+  .flow-section { margin-bottom: 60px; }
+  .flow-section-header { text-align: center; margin-bottom: 20px; }
+
+  /* Queue card */
+  .queue-card { background: #1a1e2e; border: 2px solid #ffd70040; border-radius: 12px; padding: 20px; margin: 10px 0 10px 190px; max-width: 600px; }
+  .queue-card h3 { color: #ffd700; font-size: 14px; margin-bottom: 12px; }
+  .queue-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #ffffff08; font-size: 13px; }
+  .queue-key { color: #888; }
+  .queue-val { color: #fff; }
+
+  /* Decision box */
+  .decision-box { background: #1a1e2e; border: 2px dashed #ff9500; border-radius: 12px; padding: 20px; margin: 20px 0 20px 190px; max-width: 600px; }
+  .decision-box h3 { color: #ff9500; font-size: 15px; margin-bottom: 12px; }
+  .decision-options { display: flex; gap: 12px; flex-wrap: wrap; }
+  .option { padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: default; text-align: center; }
+  .option.on-script { background: #00ff8820; border: 1px solid #00ff88; color: #00ff88; }
+  .option.off-script { background: #c084fc20; border: 1px solid #c084fc; color: #c084fc; }
+
+  /* Bridge sub-flow box */
+  .bridge-box { background: #1a1e2e; border: 2px dashed #c084fc; border-radius: 12px; padding: 20px; margin: 20px 0 20px 190px; max-width: 600px; }
+  .bridge-box h3 { color: #c084fc; font-size: 15px; margin-bottom: 12px; }
+  .bridge-options { display: flex; gap: 12px; flex-wrap: wrap; }
+  .option.send-bridge { background: #c084fc20; border: 1px solid #c084fc; color: #c084fc; }
+  .option.edit-bridge { background: #ffd70020; border: 1px solid #ffd700; color: #ffd700; }
+  .option.abort { background: #ff4d4d20; border: 1px solid #ff4d4d; color: #ff4d4d; }
+
+  /* Arrow connector */
+  .arrow-down { text-align: center; margin: 8px 0 8px 190px; color: #ff9500; font-size: 24px; }
+  .arrow-down.bridge { color: #c084fc; }
+  .arrow-down.abort { color: #ff4d4d; }
+</style>
+</head>
+<body>
+
+<h1>Chatter-in-the-Loop Flow</h1>
+<p class="subtitle">How the script pipeline changes when chatters approve each step — using Rate My Tits v2 (12 steps)</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#00d4ff"></div> System (auto)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff6b9d"></div> Fan message</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffd700"></div> Chatter decision</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#00ff88"></div> PPV step</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff9500"></div> Queue / waiting</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div> Bridge (off-script)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff4d4d"></div> Abort</div>
+</div>
+
+<div class="flow-container">
+
+  <!-- ============ CURRENT FLOW ============ -->
+  <div class="flow-section">
+    <div class="flow-section-header"><span class="flow-label current">CURRENT FLOW (fully automatic)</span></div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Detector</div><div class="step-time">every 60s</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">System</span><div class="msg">Fan found eligible &rarr; script starts automatically</div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Step 1</div><div class="step-time">instant</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">Auto Send</span><div class="msg">"what would you rate me out of 100?" <em>+ selfie</em></div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Fan reply</div><div class="step-time">~2s detect</div></div>
+      <div class="step-center"><div class="dot fan"></div><div class="line fan"></div></div>
+      <div class="step-right fan"><span class="step-tag fan">Fan</span><div class="msg">"100"</div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">AI decides</div><div class="step-time">~3s</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">Orchestrator AI</span><div class="msg">ON_SCRIPT &rarr; CONTINUE<br><em>No human involved. AI decides and sends instantly.</em></div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Step 2</div><div class="step-time">auto</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">Auto Send</span><div class="msg">"omg thank you so much! ngl sometimes I get insecure cause people tell me i'm ugly... would you consider me.. perfect? ;)"</div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Step 4</div><div class="step-time">PPV</div></div>
+      <div class="step-center"><div class="dot ppv"></div><div class="line ppv"></div></div>
+      <div class="step-right ppv"><span class="step-tag ppv">PPV $5-$10</span><div class="msg">"if you appreciate me and think im perfect, could i get a little tip?" <em>+ locked media</em><br><strong>Pauses. Waits for purchase. Bumps at 10/20/30 min.</strong></div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Steps 5-12</div></div>
+      <div class="step-center"><div class="dot system"></div></div>
+      <div class="step-right system"><span class="step-tag system">Continues</span><div class="msg"><em>Same pattern: fan replies &rarr; AI decides &rarr; auto send &rarr; PPV at steps 7, 9, 11</em></div></div>
+    </div>
+  </div>
+
+  <!-- ============ VS DIVIDER ============ -->
+  <div class="vs-divider">
+    <div class="vs-line"></div>
+    <div class="vs-text">&#9660; NEW FLOW &#9660;</div>
+    <div class="vs-line"></div>
+  </div>
+
+  <!-- ============ NEW FLOW ============ -->
+  <div class="flow-section">
+    <div class="flow-section-header"><span class="flow-label new">NEW FLOW (chatter approves each step)</span></div>
+
+    <!-- Step 1: System auto-sends -->
+    <div class="step">
+      <div class="step-left"><div class="step-label">Detector</div><div class="step-time">every 60s</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">Step 1: Auto</span><div class="msg">Fan found eligible<br>&rarr; <strong>Add fan to "AI Exclude - Automation" list on OF</strong><br>&rarr; SuperCreator stops messaging this fan<br>&rarr; Send step 1: "what would you rate me out of 100?" + selfie</div></div>
+    </div>
+
+    <!-- Fan replies -->
+    <div class="step">
+      <div class="step-left"><div class="step-label">Fan reply</div><div class="step-time">~2s detect</div></div>
+      <div class="step-center"><div class="dot fan"></div><div class="line fan"></div></div>
+      <div class="step-right fan"><span class="step-tag fan">Fan</span><div class="msg">"100"</div></div>
+    </div>
+
+    <!-- Enters queue -->
+    <div class="step">
+      <div class="step-left"><div class="step-label">Queue</div><div class="step-time">enters queue</div></div>
+      <div class="step-center"><div class="dot decision"></div><div class="line decision"></div></div>
+      <div class="step-right decision"><span class="step-tag decision">Enter Queue</span><div class="msg">Fan reply detected &rarr; <strong>enters chatter queue</strong> (NOT the AI orchestrator)</div></div>
+    </div>
+
+    <!-- Queue card - NO AI suggestion -->
+    <div class="queue-card">
+      <h3>What the chatter sees in CRM:</h3>
+      <div class="queue-row"><span class="queue-key">Fan</span><span class="queue-val">@hotfan99 ($42 lifetime spend)</span></div>
+      <div class="queue-row"><span class="queue-key">Model</span><span class="queue-val">Jess</span></div>
+      <div class="queue-row"><span class="queue-key">Fan said</span><span class="queue-val" style="color:#ff6b9d">"100"</span></div>
+      <div class="queue-row"><span class="queue-key">Last sent (Step 1)</span><span class="queue-val">"what would you rate me out of 100?"</span></div>
+      <div class="queue-row"><span class="queue-key">Next step (Step 2)</span><span class="queue-val" style="color:#00d4ff">"omg thank you so much! ngl sometimes I get insecure cause people tell me i'm ugly... would you consider me.. perfect? ;)"</span></div>
+    </div>
+
+    <div class="arrow-down">&#9660;</div>
+
+    <!-- Decision: On Script or Off Script -->
+    <div class="decision-box">
+      <h3>Chatter decides: Is the fan on script?</h3>
+      <div class="decision-options">
+        <div class="option on-script">&#10003; On Script<br><small>Fan's reply matches the flow.<br>Send next step immediately.</small></div>
+        <div class="option off-script">&#9888; Off Script<br><small>Fan went off-topic.<br>Generate a bridge message.</small></div>
+      </div>
+    </div>
+
+    <!-- ON SCRIPT PATH -->
+    <div class="section-break">
+      <div class="section-line"></div>
+      <div class="section-label" style="border-color: #00ff88; color: #00ff88;">Path A: On Script</div>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Send</div><div class="step-time">instant</div></div>
+      <div class="step-center"><div class="dot chatter"></div><div class="line chatter"></div></div>
+      <div class="step-right chatter"><span class="step-tag chatter">Approved</span><div class="msg">System sends step 2:<br>"omg thank you so much! ngl sometimes I get insecure cause people tell me i'm ugly... would you consider me.. perfect? ;)"</div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Fan reply</div></div>
+      <div class="step-center"><div class="dot fan"></div><div class="line fan"></div></div>
+      <div class="step-right fan"><span class="step-tag fan">Fan</span><div class="msg">"Yessss soooo perfect"</div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Loop</div></div>
+      <div class="step-center"><div class="dot decision"></div><div class="line decision"></div></div>
+      <div class="step-right decision"><span class="step-tag decision">Back to Queue</span><div class="msg"><em>Fan reply &rarr; enters queue again &rarr; chatter checks &rarr; On Script / Off Script &rarr; repeat until script ends</em></div></div>
+    </div>
+
+    <!-- OFF SCRIPT PATH -->
+    <div class="section-break">
+      <div class="section-line"></div>
+      <div class="section-label" style="border-color: #c084fc; color: #c084fc;">Path B: Off Script</div>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">AI generates</div><div class="step-time">~3s</div></div>
+      <div class="step-center"><div class="dot bridge"></div><div class="line bridge"></div></div>
+      <div class="step-right bridge"><span class="step-tag bridge">Bridge Generated</span><div class="msg">AI creates a bridge message to steer fan back on topic:<br><em>"haha you're funny babe but seriously, would you consider me perfect? ;)"</em></div></div>
+    </div>
+
+    <div class="arrow-down bridge">&#9660;</div>
+
+    <!-- Bridge decision -->
+    <div class="bridge-box">
+      <h3>Chatter reviews the bridge message:</h3>
+      <div class="bridge-options">
+        <div class="option send-bridge">&#10003; Send Bridge<br><small>Send as-is</small></div>
+        <div class="option edit-bridge">&#9998; Edit & Send<br><small>Modify the bridge, then send</small></div>
+        <div class="option abort">&#10005; Abort<br><small>End script, take over manually</small></div>
+      </div>
+    </div>
+
+    <!-- Bridge sent -->
+    <div class="step">
+      <div class="step-left"><div class="step-label">Bridge sent</div></div>
+      <div class="step-center"><div class="dot bridge"></div><div class="line bridge"></div></div>
+      <div class="step-right bridge"><span class="step-tag bridge">Bridge Sent</span><div class="msg">System sends the bridge message. Fan replies &rarr; <strong>back to queue</strong> with the <strong>same step</strong> (not advanced).<br><em>Chatter checks again: On Script or Off Script?</em></div></div>
+    </div>
+
+    <!-- Abort path -->
+    <div class="section-break">
+      <div class="section-line"></div>
+      <div class="section-label" style="border-color: #ff4d4d; color: #ff4d4d;">If Abort</div>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Abort</div></div>
+      <div class="step-center"><div class="dot abort"></div><div class="line system"></div></div>
+      <div class="step-right abort"><span class="step-tag abort">Script Ended</span><div class="msg">Script aborted &rarr; <strong>fan removed from "AI Exclude - Automation" list</strong><br>&rarr; SuperCreator can message them again<br>&rarr; Chatter takes over the conversation manually</div></div>
+    </div>
+
+    <!-- PPV Step example -->
+    <div class="section-break">
+      <div class="section-line"></div>
+      <div class="section-label" style="border-color: #00ff88; color: #00ff88;">PPV Steps (4, 7, 9, 11)</div>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Step 4</div><div class="step-time">PPV</div></div>
+      <div class="step-center"><div class="dot ppv"></div><div class="line ppv"></div></div>
+      <div class="step-right ppv"><span class="step-tag ppv">PPV $5-$10</span><div class="msg">Chatter approves &rarr; system sends:<br>"if you appreciate me and think im perfect, could i get a little tip?" <em>+ locked media</em><br><strong>System pauses. Bumps at 10/20/30 min. Waits for purchase.</strong><br><em>After purchase or timeout &rarr; next step enters queue again.</em></div></div>
+    </div>
+
+    <!-- Script ends -->
+    <div class="section-break">
+      <div class="section-line"></div>
+      <div class="section-label">Script Completed</div>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Cleanup</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">Done</span><div class="msg"><strong>Remove fan from "AI Exclude - Automation" list</strong> &rarr; SuperCreator can message them again</div></div>
+    </div>
+
+    <!-- Safety net -->
+    <div class="section-break">
+      <div class="section-line"></div>
+      <div class="section-label">Safety Net</div>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Timeout</div><div class="step-time">3 min</div></div>
+      <div class="step-center"><div class="dot decision"></div></div>
+      <div class="step-right decision"><span class="step-tag decision">Auto-Approve Fallback</span><div class="msg">If no chatter responds within 3 minutes &rarr; <strong>auto-approve "On Script" and send next step</strong><br><em>Fan never gets stuck waiting for a human.</em></div></div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
