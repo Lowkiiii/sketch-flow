@@ -144,9 +144,33 @@
     </div>
 
     <div class="step">
+      <div class="step-left"><div class="step-label">AI reads</div><div class="step-time">~1s</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">State Classifier</span><div class="msg">Reads the fan's reply and tags the state:<br><em>ON_SCRIPT / OFF_SCRIPT / SAFE / RISKY</em></div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Alignment</div><div class="step-time">~1s</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">Script Alignment</span><div class="msg">Does the next scripted step still make sense given the reply?<br><em>If yes &rarr; continue. If no &rarr; trigger bridge.</em></div></div>
+    </div>
+
+    <div class="step">
       <div class="step-left"><div class="step-label">AI decides</div><div class="step-time">~3s</div></div>
       <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
       <div class="step-right system"><span class="step-tag system">Orchestrator AI</span><div class="msg">ON_SCRIPT &rarr; CONTINUE<br><em>No human involved. AI decides and sends instantly.</em></div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Humanizer</div><div class="step-time">~1s</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">AI Humanizer</span><div class="msg">Rewrites the scripted message so it sounds natural, not robotic.<br><em>Matches the model's personality + conversation vibe.</em></div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Safety</div><div class="step-time">~1s</div></div>
+      <div class="step-center"><div class="dot decision"></div><div class="line decision"></div></div>
+      <div class="step-right decision"><span class="step-tag decision">Safety Guards</span><div class="msg">Final checks before send: <em>safety / tone / grief / revenue-push.</em><br>If any guard flags RED &rarr; pause and escalate. Otherwise continue.</div></div>
     </div>
 
     <div class="step">
@@ -163,8 +187,14 @@
 
     <div class="step">
       <div class="step-left"><div class="step-label">Steps 5-12</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">Continues</span><div class="msg"><em>Same pattern: fan replies &rarr; AI reads &rarr; alignment &rarr; decides &rarr; humanizer &rarr; safety &rarr; auto send &rarr; PPV at steps 7, 9, 11</em></div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Rotation</div></div>
       <div class="step-center"><div class="dot system"></div></div>
-      <div class="step-right system"><span class="step-tag system">Continues</span><div class="msg"><em>Same pattern: fan replies &rarr; AI decides &rarr; auto send &rarr; PPV at steps 7, 9, 11</em></div></div>
+      <div class="step-right system"><span class="step-tag system">After Completion</span><div class="msg"><strong>6 revenue scripts rotate per model</strong> &mdash; random order, no repeats. After all 6 with no purchase &rarr; fan becomes time-waster.</div></div>
     </div>
   </div>
 
@@ -183,7 +213,7 @@
     <div class="step">
       <div class="step-left"><div class="step-label">Detector</div><div class="step-time">every 60s</div></div>
       <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
-      <div class="step-right system"><span class="step-tag system">Step 1: Auto</span><div class="msg">Fan found eligible<br>&rarr; <strong>Add fan to "AI Exclude - Automation" list on OF</strong><br>&rarr; SuperCreator stops messaging this fan<br>&rarr; Send step 1: "what would you rate me out of 100?" + selfie</div></div>
+      <div class="step-right system"><span class="step-tag system">Step 1: Auto</span><div class="msg">Fan found eligible<br>&rarr; Send step 1: "what would you rate me out of 100?" + selfie</div></div>
     </div>
 
     <!-- Fan replies -->
@@ -193,11 +223,18 @@
       <div class="step-right fan"><span class="step-tag fan">Fan</span><div class="msg">"100"</div></div>
     </div>
 
+    <!-- Safety check runs first -->
+    <div class="step">
+      <div class="step-left"><div class="step-label">Safety</div><div class="step-time">~1s</div></div>
+      <div class="step-center"><div class="dot decision"></div><div class="line decision"></div></div>
+      <div class="step-right decision"><span class="step-tag decision">Safety Guards</span><div class="msg">Quick checks before queueing: <em>safety / tone / grief / revenue-push.</em><br>If any guard flags RED &rarr; skip the queue and escalate to the CRM's human chatter directly.</div></div>
+    </div>
+
     <!-- Enters queue -->
     <div class="step">
       <div class="step-left"><div class="step-label">Queue</div><div class="step-time">enters queue</div></div>
       <div class="step-center"><div class="dot decision"></div><div class="line decision"></div></div>
-      <div class="step-right decision"><span class="step-tag decision">Enter Queue</span><div class="msg">Fan reply detected &rarr; <strong>enters chatter queue</strong> (NOT the AI orchestrator)</div></div>
+      <div class="step-right decision"><span class="step-tag decision">Enter Queue</span><div class="msg">Safety guards passed &rarr; fan enters the <strong>chatter queue in CRM</strong> (built by co-devs, full human-in-the-loop interface).</div></div>
     </div>
 
     <!-- Queue card - NO AI suggestion -->
@@ -226,6 +263,12 @@
       <div class="section-line"></div>
       <div class="section-label" style="border-color: #00ff88; color: #00ff88;">Path A: On Script</div>
       <div class="section-line"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Humanizer</div><div class="step-time">~1s</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">AI Humanizer</span><div class="msg">Before sending, rewrites the scripted message so it sounds natural and matches the model's voice.</div></div>
     </div>
 
     <div class="step">
@@ -278,6 +321,12 @@
       <div class="step-right bridge"><span class="step-tag bridge">Bridge Sent</span><div class="msg">System sends the bridge message. Fan replies &rarr; <strong>back to queue</strong> with the <strong>same step</strong> (not advanced).<br><em>Chatter checks again: On Script or Off Script?</em></div></div>
     </div>
 
+    <div class="step">
+      <div class="step-left"><div class="step-label">Limit</div></div>
+      <div class="step-center"><div class="dot bridge"></div><div class="line bridge"></div></div>
+      <div class="step-right bridge"><span class="step-tag bridge">Bridge Limit</span><div class="msg"><strong>Max 3 bridges per script.</strong> If the fan keeps going off-script after 3 bridges &rarr; fan is marked as time-waster and the script ends.</div></div>
+    </div>
+
     <!-- Abort path -->
     <div class="section-break">
       <div class="section-line"></div>
@@ -288,7 +337,7 @@
     <div class="step">
       <div class="step-left"><div class="step-label">Abort</div></div>
       <div class="step-center"><div class="dot abort"></div><div class="line system"></div></div>
-      <div class="step-right abort"><span class="step-tag abort">Script Ended</span><div class="msg">Script aborted &rarr; <strong>fan removed from "AI Exclude - Automation" list</strong><br>&rarr; SuperCreator can message them again<br>&rarr; Chatter takes over the conversation manually</div></div>
+      <div class="step-right abort"><span class="step-tag abort">Script Ended</span><div class="msg">Script aborted &rarr; chatter takes over the conversation manually in the CRM.</div></div>
     </div>
 
     <!-- PPV Step example -->
@@ -314,7 +363,13 @@
     <div class="step">
       <div class="step-left"><div class="step-label">Cleanup</div></div>
       <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
-      <div class="step-right system"><span class="step-tag system">Done</span><div class="msg"><strong>Remove fan from "AI Exclude - Automation" list</strong> &rarr; SuperCreator can message them again</div></div>
+      <div class="step-right system"><span class="step-tag system">Done</span><div class="msg">Script completed successfully. Fan is ready for the next revenue script in the rotation (or marked as time-waster if all 6 exhausted).</div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-left"><div class="step-label">Rotation</div></div>
+      <div class="step-center"><div class="dot system"></div><div class="line system"></div></div>
+      <div class="step-right system"><span class="step-tag system">Script Rotation</span><div class="msg"><strong>6 revenue scripts rotate per model</strong> &mdash; random order, no repeats. Fan gets a different script next time until all 6 are exhausted.</div></div>
     </div>
 
     <!-- Safety net -->
